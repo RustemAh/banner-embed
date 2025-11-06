@@ -11,7 +11,7 @@ body { margin:0; font-family: Arial, Roboto, sans-serif; background:#fff; }
 .banner-hd { background:#FFD400; padding:8px 12px; font-weight:700; text-transform:uppercase; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; }
 .banner-hd span { font-size:12px; color:#444; }
 .row-container { display:flex; flex-wrap:nowrap; overflow-x:auto; scroll-behavior:smooth; padding:10px; gap:12px; }
-.row-card { flex:0 0 auto; background:#fff; border:1px solid #eee; border-radius:10px; padding:10px; width:160px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
+.row-card { flex:0 0 auto; background:#fff; border:1px solid #eee; border-radius:10px; padding:10px; width:170px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
 .row-card.winner { background:#F3F8FF; border-color:#B4D2FF; }
 .photo { width:60px; height:60px; border-radius:50%; object-fit:cover; border:1px solid #ddd; margin-bottom:6px; }
 .name { font-weight:600; font-size:14px; color:#111; margin-bottom:2px; }
@@ -19,6 +19,7 @@ body { margin:0; font-family: Arial, Roboto, sans-serif; background:#fff; }
 .bar-rail { width:100%; height:8px; background:#eee; border-radius:6px; overflow:hidden; margin:4px 0; }
 .bar-fill { height:8px; border-radius:6px; }
 .percent { font-size:13px; font-weight:700; color:#222; }
+.votes { font-size:12px; color:#444; margin-top:2px; }
 .winner-chip { display:block; font-size:11px; color:#000; background:#FFD400; border-radius:6px; padding:2px 4px; margin-top:4px; font-weight:700; }
 
 .footer { display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; padding:8px 12px; font-size:12px; color:#555; flex-wrap:wrap; gap:8px; }
@@ -59,17 +60,27 @@ const candidateColorMap={
 };
 
 function colorForRow(r){ return candidateColorMap[r.candidate]||"#6b7280"; }
-function formatInt(n){ return (n||0).toLocaleString("es-CL"); }
+function formatInt(n){ return (n??0).toLocaleString("es-CL"); }
 function nowStamp(){ const d=new Date(); return d.toLocaleString("es-CL",{dateStyle:"medium",timeStyle:"short"}); }
+
+// Parseo robusto para 'votes' (admite 1.234.567 / 1 234 567 / 1,234,567)
+function parseVotes(x){
+  if (x==null) return 0;
+  const s=String(x).trim();
+  if (!s) return 0;
+  const onlyDigits=s.replace(/[^\d]/g,"");
+  return onlyDigits? Number(onlyDigits) : 0;
+}
 
 function parseCSV(text){
   const lines=text.trim().split(/\r?\n/);
   const headers=lines.shift().split(",").map(h=>h.trim());
   return lines.map(line=>{
+    // soporte básico de CSV (sin comillas anidadas)
     const cols=line.split(",").map(c=>c.trim());
     const obj={};
     headers.forEach((h,i)=>obj[h]=cols[i]||"");
-    obj.votes=obj.votes?Number(String(obj.votes).replace(/\./g,"")):0;
+    obj.votes=parseVotes(obj.votes);
     obj.percent=obj.percent?Number(String(obj.percent).replace(",", ".")):0;
     return obj;
   });
@@ -86,10 +97,12 @@ function render(rows){
   cont.innerHTML="";
   const blanco=rows.find(r=>r.candidate?.toLowerCase().includes("voto nulo"));
   const others=rows.filter(r=>!r.candidate?.toLowerCase().includes("voto nulo"));
-  const allZero=others.length>0 && others.every(r=>(+r.votes||0)===0 && (+r.percent||0)===0);
+
+  const allZero=others.length>0 && others.every(r=> (r.votes||0)===0 && (r.percent||0)===0);
   others.sort((a,b)=>(b.percent||0)-(a.percent||0)||(b.votes||0)-(a.votes||0));
   const topTwo=allZero?[]:others.slice(0,2).map(r=>r.candidate);
 
+  // pintar tarjetas (otros + nulo/blanco al final si existe)
   [...others, blanco].forEach(r=>{
     if(!r) return;
     const color=colorForRow(r);
@@ -103,6 +116,7 @@ function render(rows){
         <div class="party" style="background:${color};">${r.party||"O"}</div>
         <div class="bar-rail"><div class="bar-fill" style="width:${pct}%;background:${color};"></div></div>
         <div class="percent">${pct>0?pct.toFixed(1)+"%":"—"}</div>
+        <div class="votes">${formatInt(r.votes)} votos</div>
         ${isTop&&!allZero?'<div class="winner-chip">✓ Pasa a 2ª vuelta</div>':""}
       </div>`;
   });
@@ -115,14 +129,17 @@ async function load(){
     const text=await fetchCSV(DATA_URL);
     const rows=parseCSV(text);
     render(rows);
+    document.getElementById("footnote").textContent="Actualiza cada "+(REFRESH_MS/1000)+"s · Fuente: Google Sheets (CSV)";
   }catch(e){
     console.error(e);
+    document.getElementById("footnote").textContent="Error cargando CSV (revisa permisos de la hoja).";
   }
 }
 
 document.getElementById("refreshBtn").addEventListener("click",()=>{
-  document.getElementById("refreshBtn").textContent="⏳ Actualizando...";
-  load().then(()=>document.getElementById("refreshBtn").textContent="🔄 Actualizar");
+  const btn=document.getElementById("refreshBtn");
+  btn.textContent="⏳ Actualizando...";
+  load().then(()=>btn.textContent="🔄 Actualizar");
 });
 
 load();
