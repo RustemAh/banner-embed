@@ -3,13 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Resultados Presidenciales — Banner Horizontal</title>
+<title>Banner Horizontal — Resultados</title>
 
 <style>
 :root { color-scheme: light; }
 body { margin:0; font-family: Arial, Roboto, sans-serif; background:#fff; }
 
-/* FIX: permitir que la altura crezca */
 .banner-wrap { 
   width:100%; 
   max-width:1200px; 
@@ -17,20 +16,9 @@ body { margin:0; font-family: Arial, Roboto, sans-serif; background:#fff; }
   background:#f9f9f9; 
   border:1px solid #ddd; 
   border-radius:10px; 
-  overflow:visible !important;   /* ⚠️ FIX CLAVE */
+  overflow:visible !important;
+  padding-top:10px; /* pequeño margen superior donde estaba la barra */
 }
-
-.banner-hd { 
-  background:#FFD400; 
-  padding:8px 12px; 
-  font-weight:700; 
-  text-transform:uppercase; 
-  display:flex; 
-  justify-content:space-between; 
-  align-items:center; 
-  flex-wrap:wrap; 
-}
-.banner-hd span { font-size:12px; color:#444; }
 
 .row-container { 
   display:flex; 
@@ -39,7 +27,7 @@ body { margin:0; font-family: Arial, Roboto, sans-serif; background:#fff; }
   scroll-behavior:smooth; 
   padding:10px; 
   gap:12px;
-  overflow-y:visible !important; /* ⚠️ Para evitar recorte inferior */
+  overflow-y:visible !important;
 }
 
 .row-card { 
@@ -50,8 +38,8 @@ body { margin:0; font-family: Arial, Roboto, sans-serif; background:#fff; }
   padding:10px; 
   width:170px; 
   text-align:center; 
-  box-shadow:0 1px 3px rgba(0,0,0,0.05); 
-  overflow:visible !important; /* ⚠️ Fix */
+  box-shadow:0 1px 3px rgba(0,0,0,0.05);
+  overflow:visible !important;
 }
 
 .row-card.winner { background:#F3F8FF; border-color:#B4D2FF; }
@@ -126,7 +114,6 @@ body { margin:0; font-family: Arial, Roboto, sans-serif; background:#fff; }
 }
 .refresh:hover { background:#004B8A; }
 
-/* Móvil */
 @media (max-width:600px){
   .row-container { flex-wrap:wrap; justify-content:center; overflow-x:hidden; }
   .row-card { width:45%; min-width:150px; }
@@ -136,10 +123,8 @@ body { margin:0; font-family: Arial, Roboto, sans-serif; background:#fff; }
 
 <body>
 <div class="banner-wrap">
-  <div class="banner-hd">
-    <div>Resultados Presidenciales Chile 2025</div>
-    <span id="ts">—</span>
-  </div>
+
+  <!-- Sin barra de título -->
 
   <div id="rowContainer" class="row-container"></div>
 
@@ -147,6 +132,7 @@ body { margin:0; font-family: Arial, Roboto, sans-serif; background:#fff; }
     <div id="footnote">Actualiza cada 60 s · Fuente: Servel</div>
     <button id="refreshBtn" class="refresh">🔄 Actualizar</button>
   </div>
+
 </div>
 
 <script>
@@ -163,7 +149,6 @@ const candidateColorMap={
 
 function colorForRow(r){ return candidateColorMap[r.candidate]||"#6b7280"; }
 function formatInt(n){ return (n??0).toLocaleString("es-CL"); }
-function nowStamp(){ const d=new Date(); return d.toLocaleString("es-CL",{dateStyle:"medium",timeStyle:"short"}); }
 
 function parseVotes(x){
   if (x==null) return 0;
@@ -221,7 +206,6 @@ function render(rows){
       </div>`;
   });
 
-  document.getElementById("ts").textContent="Actualizado: "+nowStamp();
 }
 
 async function load(){
@@ -246,7 +230,7 @@ load();
 setInterval(load,REFRESH_MS);
 </script>
 
-<!-- AUTO HEIGHT POSTMESSAGE -->
+<!-- AUTO HEIGHT -->
 <script>
 function sendHeight() {
   const h = document.documentElement.scrollHeight;
@@ -259,3 +243,4 @@ setInterval(sendHeight, 500);
 
 </body>
 </html>
+
