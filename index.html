@@ -17,7 +17,7 @@ body { margin:0; font-family: Arial, Roboto, sans-serif; background:#fff; }
   border:1px solid #ddd; 
   border-radius:10px; 
   overflow:visible !important;
-  padding-top:10px; /* pequeño margen superior donde estaba la barra */
+  padding-top:10px;
 }
 
 .row-container { 
@@ -55,7 +55,9 @@ body { margin:0; font-family: Arial, Roboto, sans-serif; background:#fff; }
 .name { font-weight:600; font-size:14px; color:#111; margin-bottom:2px; }
 
 .party { 
-  display:inline-block; 
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
   background:#6b7280; 
   color:#fff; 
   border-radius:4px; 
@@ -63,6 +65,20 @@ body { margin:0; font-family: Arial, Roboto, sans-serif; background:#fff; }
   font-size:12px; 
   font-weight:600; 
   margin-bottom:4px; 
+}
+
+/* NUEVO badge mini */
+.badge-mini {
+  background:#FFD400;
+  color:#000;
+  font-size:10px;
+  font-weight:700;
+  padding:2px 4px;
+  border-radius:4px;
+  line-height:1;
+  display:inline-block;
+  white-space:nowrap;
+  border:1px solid #e6c200;
 }
 
 .bar-rail { 
@@ -78,17 +94,6 @@ body { margin:0; font-family: Arial, Roboto, sans-serif; background:#fff; }
 
 .percent { font-size:13px; font-weight:700; color:#222; }
 .votes { font-size:12px; color:#444; margin-top:2px; }
-
-.winner-chip { 
-  display:block; 
-  font-size:11px; 
-  color:#000; 
-  background:#FFD400; 
-  border-radius:6px; 
-  padding:2px 4px; 
-  margin-top:4px; 
-  font-weight:700; 
-}
 
 .footer { 
   display:flex; 
@@ -123,8 +128,6 @@ body { margin:0; font-family: Arial, Roboto, sans-serif; background:#fff; }
 
 <body>
 <div class="banner-wrap">
-
-  <!-- Sin barra de título -->
 
   <div id="rowContainer" class="row-container"></div>
 
@@ -198,11 +201,19 @@ function render(rows){
       <div class="row-card${isTop?" winner":""}">
         ${photo}
         <div class="name">${r.candidate||""}</div>
-        <div class="party" style="background:${color};">${r.party||"O"}</div>
-        <div class="bar-rail"><div class="bar-fill" style="width:${pct}%;background:${color};"></div></div>
+
+        <!-- PARTY + BADGE MINI -->
+        <div class="party" style="background:${color};">
+          ${r.party||"O"}
+          ${isTop&&!allZero?'<span class="badge-mini">✓ 2ª V</span>':""}
+        </div>
+
+        <div class="bar-rail">
+          <div class="bar-fill" style="width:${pct}%;background:${color};"></div>
+        </div>
+
         <div class="percent">${pct>0?pct.toFixed(1)+"%":"—"}</div>
         <div class="votes">${formatInt(r.votes)} votos</div>
-        ${isTop&&!allZero?'<div class="winner-chip">✓ Pasa a 2ª vuelta</div>':""}
       </div>`;
   });
 
@@ -213,7 +224,7 @@ async function load(){
     const text=await fetchCSV(DATA_URL);
     const rows=parseCSV(text);
     render(rows);
-    document.getElementById("footnote").textContent="Actualiza cada "+(REFRESH_MS/1000)+"s · Fuente: Google Sheets (CSV)";
+    document.getElementById("footnote").textContent="Actualiza cada "+(REFRESH_MS/1000)+"s · Fuente: Servel";
   }catch(e){
     console.error(e);
     document.getElementById("footnote").textContent="Error cargando CSV.";
@@ -230,7 +241,7 @@ load();
 setInterval(load,REFRESH_MS);
 </script>
 
-<!-- AUTO HEIGHT -->
+<!-- Auto-height para WordPress -->
 <script>
 function sendHeight() {
   const h = document.documentElement.scrollHeight;
